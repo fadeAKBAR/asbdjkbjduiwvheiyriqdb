@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "fadlannakbarr97@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidSession(data) {
+      return data.keys().hasAll(['studentId', 'studentName', 'startTime', 'status', 'violations']) &&
+             data.studentId is string &&
+             data.studentName is string &&
+             data.status in ['active', 'completed', 'terminated'] &&
+             data.violations is number && data.violations >= 0 && data.violations <= 5;
+    }
+
+    match /students/{studentId} {
+      allow read: if true; // Allow checking NISN during login
+      allow write: if isAdmin();
+    }
+
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /sessions/{sessionId} {
+      // Allow any authenticated user to read sessions (queries will filter by NISN)
+      allow read: if isAuthenticated();
+      // Allow any authenticated user to create a session for themselves
+      allow create: if isAuthenticated() && isValidSession(request.resource.data);
+      // Allow update if owner (by studentId/NISN) or admin
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        isValidSession(request.resource.data) &&
+        request.resource.data.studentId == resource.data.studentId &&
+        request.resource.data.startTime == resource.data.startTime
+      );
+    }
+  }
+}

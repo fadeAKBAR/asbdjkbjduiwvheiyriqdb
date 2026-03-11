@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Student information for the exam",
+      "type": "object",
+      "properties": {
+        "nisn": { "type": "string", "description": "National Student Identification Number" },
+        "name": { "type": "string", "description": "Full name of the student" }
+      },
+      "required": ["nisn", "name"]
+    },
+    "ExamSession": {
+      "title": "ExamSession",
+      "description": "Information about a student's exam attempt",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Reference to the student document ID" },
+        "studentName": { "type": "string", "description": "Name of the student" },
+        "startTime": { "type": "string", "format": "date-time", "description": "When the exam started" },
+        "endTime": { "type": "string", "format": "date-time", "description": "When the exam ended" },
+        "score": { "type": "number", "description": "Final score achieved" },
+        "violations": { "type": "number", "description": "Number of cheating violations" },
+        "status": { "type": "string", "enum": ["active", "completed", "terminated"], "description": "Current status of the exam" },
+        "lastActive": { "type": "string", "format": "date-time", "description": "Last time student was active" }
+      },
+      "required": ["studentId", "studentName", "startTime", "status"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Exam question",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["text", "options", "correctAnswer"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Collection of registered students"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "ExamSession",
+      "description": "Collection of exam attempts"
+    },
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Collection of exam questions"
+    }
+  }
+}
